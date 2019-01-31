@@ -2,7 +2,7 @@ package aspectj
 
 import org.gradle.api.tasks.SourceSet
 
-public interface NamingConventions {
+interface NamingConventions {
 
     String getJavaCompileTaskName(SourceSet sourceSet);
 
