@@ -1,7 +1,7 @@
 apply plugin: 'groovy'
 
-group = 'nl.eveoh'
-version = '2.1'
+wrapper.distributionType = Wrapper.DistributionType.ALL
+wrapper.gradleVersion = gradleVersion
 
 dependencies {
     compile localGroovy()
