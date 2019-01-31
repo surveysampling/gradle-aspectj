@@ -1,36 +1,9 @@
 apply plugin: 'groovy'
-apply plugin: 'maven-publish'
 
 group = 'nl.eveoh'
 version = '2.1'
-
-repositories {
-    maven {
-        url "https://maven.eveoh.nl/content/groups/public"
-    }
-}
 
 dependencies {
     compile localGroovy()
     compile gradleApi()
 }
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-        }
-    }
-    repositories {
-        maven {
-            url "https://maven.eveoh.nl/content/repositories/releases"
-            if (project.hasProperty('mavenUser')) {
-                credentials {
-                    username mavenUser
-                    password mavenPass
-                }
-            }
-        }
-    }
-}
-
