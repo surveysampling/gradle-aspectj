@@ -4,6 +4,21 @@ wrapper.distributionType = Wrapper.DistributionType.ALL
 wrapper.gradleVersion = gradleVersion
 
 dependencies {
-    compile localGroovy()
-    compile gradleApi()
+    implementation localGroovy()
+    implementation gradleApi()
+}
+
+task sourcesJar(type: Jar, group: 'build') {
+    classifier = 'sources'
+    from sourceSets.main.java
+}
+
+task javadocJar(type: Jar, group: 'build') {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives tasks.sourcesJar
+    archives tasks.javadocJar
 }
