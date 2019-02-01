@@ -6,6 +6,7 @@ wrapper.gradleVersion = gradleVersion
 dependencies {
     implementation localGroovy()
     implementation gradleApi()
+    testImplementation "org.spockframework:spock-core:${spockVersion}"
 }
 
 task sourcesJar(type: Jar, group: 'build') {
