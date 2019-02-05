@@ -6,7 +6,11 @@ wrapper.gradleVersion = gradleVersion
 dependencies {
     implementation localGroovy()
     implementation gradleApi()
-    testImplementation "org.spockframework:spock-core:${spockVersion}"
+    testImplementation "cglib:cglib-nodep:${cglibVersion}"
+    testImplementation "org.objenesis:objenesis:${objenesisVersion}"
+    testImplementation("org.spockframework:spock-core:${spockVersion}") {
+        exclude group: 'org.codehaus.groovy'
+    }
 }
 
 task sourcesJar(type: Jar, group: 'build') {
