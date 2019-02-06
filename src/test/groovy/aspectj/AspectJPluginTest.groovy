@@ -181,7 +181,7 @@ class AspectJPluginTest extends Specification {
                 .withType(JavaCompile)
                 .getByName(getCompileTaskName(sourceSet.name, 'Java'))
 
-        if (!sourceSet.allJava.isEmpty()) {
+        if (!sourceSet.java.isEmpty()) {
 
             final Ajc compileAspect = ajcTasks[getCompileTaskName(sourceSet.name, 'Aspect')]
 

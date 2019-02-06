@@ -8,11 +8,6 @@ import org.gradle.api.tasks.SourceSet
 class MainNamingConventions implements NamingConventions {
 
     @Override
-    String getJavaCompileTaskName(final SourceSet sourceSet) {
-        return "compileJava"
-    }
-
-    @Override
     String getAspectCompileTaskName(final SourceSet sourceSet) {
         return "compileAspect"
     }

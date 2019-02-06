@@ -8,11 +8,6 @@ import org.gradle.api.tasks.SourceSet
 class DefaultNamingConventions implements NamingConventions {
 
     @Override
-    String getJavaCompileTaskName(final SourceSet sourceSet) {
-        return "compile${sourceSet.name.capitalize()}Java"
-    }
-
-    @Override
     String getAspectCompileTaskName(final SourceSet sourceSet) {
         return "compile${sourceSet.name.capitalize()}Aspect"
     }

@@ -3,7 +3,12 @@ package aspectj
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.dsl.DependencyHandler
 import org.gradle.api.plugins.JavaPlugin
+import org.gradle.api.plugins.JavaPluginConvention
+import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.compile.JavaCompile
+
 /**
  *
  * @author Luke Taylor
@@ -11,52 +16,93 @@ import org.gradle.api.plugins.JavaPlugin
  */
 class AspectJPlugin implements Plugin<Project> {
 
-    void apply(Project project) {
-        project.plugins.apply(JavaPlugin)
+    private static final String CONFIGURATION_AJTOOLS = 'ajtools'
 
-        def aspectj = project.extensions.create('aspectj', AspectJExtension, project)
+    void apply(final Project project) {
 
-        if (project.configurations.findByName('ajtools') == null) {
-            project.configurations.create('ajtools')
-            project.afterEvaluate { p ->
-                if (aspectj.version == null) {
-                    throw new GradleException("No aspectj version supplied")
-                }
+        project
+                .plugins
+                .apply(JavaPlugin)
 
-                p.dependencies {
-                    ajtools "org.aspectj:aspectjtools:${aspectj.version}"
-                    compile "org.aspectj:aspectjrt:${aspectj.version}"
-                }
-            }
+        final AspectJExtension aspectj = project
+                .extensions
+                .create('aspectj', AspectJExtension, project)
+
+        if (project.configurations.findByName(CONFIGURATION_AJTOOLS) == null) {
+            configureAspectJDependencies(project, aspectj)
         }
 
-        for (projectSourceSet in project.sourceSets) {
-            def namingConventions = projectSourceSet.name.equals('main') ? new MainNamingConventions() : new DefaultNamingConventions();
-            for (configuration in [namingConventions.getAspectPathConfigurationName(projectSourceSet), namingConventions.getAspectInpathConfigurationName(projectSourceSet)]) {
-                if (project.configurations.findByName(configuration) == null) {
-                    project.configurations.create(configuration)
-                }
+        project
+                .convention
+                .getPlugin(JavaPluginConvention)
+                .sourceSets
+                .forEach({ final SourceSet sourceSet -> configureSourceSet(project, sourceSet) })
+    }
+
+    private static void configureAspectJDependencies(final Project project, final AspectJExtension extension) {
+
+        project
+                .configurations
+                .maybeCreate(CONFIGURATION_AJTOOLS)
+
+        project.afterEvaluate { final Project p ->
+            if (extension.version == null) {
+                throw new GradleException("No aspectj version supplied")
             }
 
-            if (!projectSourceSet.allJava.isEmpty()) {
-                def aspectTaskName = namingConventions.getAspectCompileTaskName(projectSourceSet)
-                def javaTaskName = namingConventions.getJavaCompileTaskName(projectSourceSet)
+            final DependencyHandler dependencyHandler = p.dependencies
 
-                project.tasks.create(name: aspectTaskName, overwrite: true, description: "Compiles AspectJ Source for ${projectSourceSet.name} source set", type: Ajc) {
-                    sourceSet = projectSourceSet
-                    inputs.files(sourceSet.allJava)
-                    outputs.dir(sourceSet.java.outputDir)
-                    aspectpath = project.configurations.findByName(namingConventions.getAspectPathConfigurationName(projectSourceSet))
-                    ajInpath = project.configurations.findByName(namingConventions.getAspectInpathConfigurationName(projectSourceSet))
-                }
-
-                project.tasks[aspectTaskName].setDependsOn(project.tasks[javaTaskName].dependsOn)
-                project.tasks[aspectTaskName].dependsOn(project.tasks[aspectTaskName].aspectpath)
-                project.tasks[aspectTaskName].dependsOn(project.tasks[aspectTaskName].ajInpath)
-                project.tasks[javaTaskName].deleteAllActions()
-                project.tasks[javaTaskName].dependsOn(project.tasks[aspectTaskName])
-            }
+            dependencyHandler.add(CONFIGURATION_AJTOOLS, "org.aspectj:aspectjtools:${extension.version}")
+            dependencyHandler.add(JavaPlugin.COMPILE_CONFIGURATION_NAME, "org.aspectj:aspectjrt:${extension.version}")
         }
+    }
+
+    private static void configureSourceSet(final Project project, final SourceSet sourceSet) {
+
+        final NamingConventions namingConventions = getConfigurationNamingConventions(sourceSet)
+        project.configurations.maybeCreate(namingConventions.getAspectPathConfigurationName(sourceSet))
+        project.configurations.maybeCreate(namingConventions.getAspectInpathConfigurationName(sourceSet))
+
+        if (!sourceSet.java.isEmpty()) {
+            configureTasks(project, namingConventions, sourceSet)
+        }
+    }
+
+    private static void configureTasks(final Project project,
+                                       final NamingConventions namingConventions,
+                                       final SourceSet projectSourceSet) {
+
+        final Ajc ajc = project
+                .tasks
+                .create(namingConventions.getAspectCompileTaskName(projectSourceSet), Ajc)
+
+        final JavaCompile javaCompile = project
+                .tasks
+                .withType(JavaCompile)
+                .getByName(projectSourceSet.compileJavaTaskName)
+
+        ajc.description = "Compiles AspectJ Source for ${projectSourceSet.name} source set"
+        ajc.sourceSet = projectSourceSet
+        ajc.inputs.files(projectSourceSet.allJava)
+        ajc.outputs.dir(projectSourceSet.java.outputDir)
+        ajc.aspectpath = project
+                .configurations
+                .getByName(namingConventions.getAspectPathConfigurationName(projectSourceSet))
+        ajc.ajInpath = project
+                .configurations
+                .getByName(namingConventions.getAspectInpathConfigurationName(projectSourceSet))
+
+        ajc.dependsOn = javaCompile.dependsOn
+        ajc.dependsOn(ajc.aspectpath, ajc.ajInpath, javaCompile.classpath)
+
+        javaCompile.getTaskActions().clear()
+        javaCompile.dependsOn(ajc)
+    }
+
+    private static NamingConventions getConfigurationNamingConventions(final SourceSet sourceSet) {
+        sourceSet.name == SourceSet.MAIN_SOURCE_SET_NAME ?
+                new MainNamingConventions() :
+                new DefaultNamingConventions()
     }
 }
 
