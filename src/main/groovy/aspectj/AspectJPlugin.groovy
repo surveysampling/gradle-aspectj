@@ -1,6 +1,6 @@
 package aspectj
 
-import org.gradle.api.GradleException
+
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.dsl.DependencyHandler
@@ -8,7 +8,6 @@ import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.compile.JavaCompile
-
 /**
  *
  * @author Luke Taylor
@@ -45,16 +44,9 @@ class AspectJPlugin implements Plugin<Project> {
                 .configurations
                 .maybeCreate(CONFIGURATION_AJTOOLS)
 
-        project.afterEvaluate { final Project p ->
-            if (extension.version == null) {
-                throw new GradleException("No aspectj version supplied")
-            }
-
-            final DependencyHandler dependencyHandler = p.dependencies
-
-            dependencyHandler.add(CONFIGURATION_AJTOOLS, "org.aspectj:aspectjtools:${extension.version}")
-            dependencyHandler.add(JavaPlugin.COMPILE_CONFIGURATION_NAME, "org.aspectj:aspectjrt:${extension.version}")
-        }
+        final DependencyHandler dependencyHandler = project.dependencies
+        dependencyHandler.add(CONFIGURATION_AJTOOLS, "org.aspectj:aspectjtools:${extension.version}")
+        dependencyHandler.add(JavaPlugin.COMPILE_CONFIGURATION_NAME, "org.aspectj:aspectjrt:${extension.version}")
     }
 
     private static void configureSourceSet(final Project project, final SourceSet sourceSet) {

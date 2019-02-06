@@ -75,7 +75,6 @@ class AspectJPluginTest extends Specification {
 
         when:
         project.plugins.apply(AspectJPlugin)
-        project.evaluate()
 
         then:
         final AspectJExtension extension = project.extensions.getByType(AspectJExtension)
