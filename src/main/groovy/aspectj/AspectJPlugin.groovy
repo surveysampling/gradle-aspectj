@@ -82,18 +82,18 @@ class AspectJPlugin implements Plugin<Project> {
                 .getByName(projectSourceSet.compileJavaTaskName)
 
         ajc.description = "Compiles AspectJ Source for ${projectSourceSet.name} source set"
-        ajc.sourceSet = projectSourceSet
-        ajc.inputs.files(projectSourceSet.allJava)
-        ajc.outputs.dir(projectSourceSet.java.outputDir)
-        ajc.aspectpath = project
+        ajc.sourceDirectories = projectSourceSet.java.srcDirs
+        ajc.destinationDir = projectSourceSet.java.outputDir
+        ajc.classpath = projectSourceSet.compileClasspath
+        ajc.aspectPath = project
                 .configurations
                 .getByName(namingConventions.getAspectPathConfigurationName(projectSourceSet))
-        ajc.ajInpath = project
+        ajc.ajInPath = project
                 .configurations
                 .getByName(namingConventions.getAspectInpathConfigurationName(projectSourceSet))
 
         ajc.dependsOn = javaCompile.dependsOn
-        ajc.dependsOn(ajc.aspectpath, ajc.ajInpath, javaCompile.classpath)
+        ajc.dependsOn(ajc.aspectPath, ajc.ajInPath, javaCompile.classpath)
 
         javaCompile.getTaskActions().clear()
         javaCompile.dependsOn(ajc)

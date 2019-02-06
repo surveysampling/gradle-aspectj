@@ -4,22 +4,35 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.plugins.JavaPluginConvention
-import org.gradle.api.tasks.SourceSet
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 
 class Ajc extends DefaultTask {
 
-    SourceSet sourceSet
+    @InputFiles
+    FileCollection classpath
 
-    FileCollection aspectpath
+    @InputFiles
+    FileCollection aspectPath
 
-    FileCollection ajInpath
+    @InputFiles
+    FileCollection ajInPath
+
+    @InputFiles
+    Set<File> sourceDirectories
+
+    @OutputDirectory
+    File destinationDir
 
     // ignore or warning
+    @Input
     String xlint = 'ignore'
 
+    @Optional
+    @Input
     String maxmem
 
+    @Optional
+    @Input
     Map<String, String> additionalAjcArgs = [] as Map<String, String>
 
     Iajc iajc = new Iajc()
@@ -35,32 +48,27 @@ class Ajc extends DefaultTask {
         logger.info("=" * 30)
         logger.info("=" * 30)
         logger.info("Running ajc ...")
-        logger.info("classpath: ${sourceSet.compileClasspath.asPath}")
-        logger.info("srcDirs $sourceSet.java.srcDirs")
+        logger.info("classpath: ${classpath.asPath}")
+        logger.info("srcDirs ${sourceDirectories}")
 
-        iajc.execute(project, sourceSet, getIajcArguments())
+        iajc.execute(project, sourceDirectories, getIajcArguments())
     }
 
     private Map<String, ?> getIajcArguments() {
-
-        final String destinationDir = sourceSet
-                .java
-                .outputDir
-                .absolutePath
 
         final JavaPluginConvention javaPluginConvention = project
                 .convention
                 .getPlugin(JavaPluginConvention)
 
-        final Map<String, ?> iajcArgs = [classpath           : sourceSet.compileClasspath.asPath,
-                                         destDir             : destinationDir,
-                                         s                   : destinationDir,
+        final Map<String, ?> iajcArgs = [classpath           : classpath.asPath,
+                                         destDir             : destinationDir.absolutePath,
+                                         s                   : destinationDir.absolutePath,
                                          source              : javaPluginConvention.sourceCompatibility,
                                          target              : javaPluginConvention.targetCompatibility,
-                                         inpath              : ajInpath.asPath,
+                                         inpath              : ajInPath.asPath,
                                          xlint               : xlint,
                                          fork                : true,
-                                         aspectPath          : aspectpath.asPath,
+                                         aspectPath          : aspectPath.asPath,
                                          sourceRootCopyFilter: '**/*.java,**/*.aj',
                                          showWeaveInfo       : true]
 
@@ -78,7 +86,7 @@ class Ajc extends DefaultTask {
 
     private void verifyArguments() {
 
-        if (sourceSet == null || aspectpath == null || ajInpath == null) {
+        if (classpath == null || sourceDirectories == null || destinationDir == null || aspectPath == null || ajInPath == null) {
             throw new IllegalArgumentException()
         }
     }

@@ -61,10 +61,10 @@ class AspectJPluginTest extends Specification {
                 .convention
                 .getPlugin(JavaPluginConvention)
 
-        final SourceSet main = getAndConfigure(javaPluginConvention, SourceSet.MAIN_SOURCE_SET_NAME, mainSourceFolder)
-        final SourceSet test = getAndConfigure(javaPluginConvention, SourceSet.TEST_SOURCE_SET_NAME, testSourceFolder)
-        final SourceSet integTest = getAndConfigure(javaPluginConvention, SOURCE_SET_INTEG_TEST, integTestSourceFolder)
-        final SourceSet slowIntegTest = getAndConfigure(javaPluginConvention, SOURCE_SET_SLOW_INTEG_TEST, null)
+        final SourceSet main = getAndConfigureSourceSet(javaPluginConvention, SourceSet.MAIN_SOURCE_SET_NAME, mainSourceFolder)
+        final SourceSet test = getAndConfigureSourceSet(javaPluginConvention, SourceSet.TEST_SOURCE_SET_NAME, testSourceFolder)
+        final SourceSet integTest = getAndConfigureSourceSet(javaPluginConvention, SOURCE_SET_INTEG_TEST, integTestSourceFolder)
+        final SourceSet slowIntegTest = getAndConfigureSourceSet(javaPluginConvention, SOURCE_SET_SLOW_INTEG_TEST, null)
 
         if (ajVersion != null) {
             project
@@ -106,8 +106,8 @@ class AspectJPluginTest extends Specification {
                 .convention
                 .getPlugin(JavaPluginConvention)
 
-        final SourceSet main = getAndConfigure(javaPluginConvention, SourceSet.MAIN_SOURCE_SET_NAME, null)
-        final SourceSet test = getAndConfigure(javaPluginConvention, SourceSet.TEST_SOURCE_SET_NAME, null)
+        final SourceSet main = getAndConfigureSourceSet(javaPluginConvention, SourceSet.MAIN_SOURCE_SET_NAME, null)
+        final SourceSet test = getAndConfigureSourceSet(javaPluginConvention, SourceSet.TEST_SOURCE_SET_NAME, null)
 
         if (ajVersion != null) {
             project
@@ -132,9 +132,9 @@ class AspectJPluginTest extends Specification {
         ajVersion << [null, '1.9.0']
     }
 
-    private static SourceSet getAndConfigure(final JavaPluginConvention javaPluginConvention,
-                                             final String name,
-                                             final TemporaryFolder temporaryFolder) {
+    private static SourceSet getAndConfigureSourceSet(final JavaPluginConvention javaPluginConvention,
+                                                      final String name,
+                                                      final TemporaryFolder temporaryFolder) {
 
         final SourceSet sourceSet = javaPluginConvention
                 .sourceSets
@@ -188,7 +188,9 @@ class AspectJPluginTest extends Specification {
             assert compileJava.actions.isEmpty()
             assert compileJava.taskDependencies.getDependencies(compileJava).contains(compileAspect)
 
-            assert compileAspect.sourceSet == sourceSet
+            assert compileAspect.classpath == sourceSet.compileClasspath
+            assert compileAspect.sourceDirectories == sourceSet.java.srcDirs
+            assert compileAspect.destinationDir == sourceSet.java.outputDir
             assert compileAspect.dependsOn.contains(aspectPath)
             assert compileAspect.dependsOn.contains(ajInPath)
 

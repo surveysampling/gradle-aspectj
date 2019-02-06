@@ -8,6 +8,7 @@ import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
 import org.gradle.internal.impldep.com.google.common.collect.ImmutableMap
+import org.gradle.internal.impldep.com.google.common.collect.ImmutableSet
 import org.gradle.testfixtures.ProjectBuilder
 import spock.lang.Specification
 import spock.lang.Subject
@@ -55,17 +56,21 @@ class AjcTest extends Specification {
     def "Compile xlint=#xlint"() {
 
         setup:
-        ajc.sourceSet = sourceSet
-        ajc.aspectpath = aspectpath
-        ajc.ajInpath = ajInpath
+        final FileCollection classpath = sourceSet.compileClasspath
+        final File destinationDir = sourceSet.java.outputDir
+        final Set<File> srcDirs = sourceSet.java.srcDirs
+
+        ajc.classpath = classpath
+        ajc.destinationDir = destinationDir
+        ajc.sourceDirectories = srcDirs
+        ajc.aspectPath = aspectpath
+        ajc.ajInPath = ajInpath
         ajc.xlint = xlint
         ajc.iajc = iajc
 
-        final String destDir = sourceSet.java.outputDir.absolutePath
-
-        final Map<String, ?> expectedArgs = [classpath           : sourceSet.compileClasspath.asPath,
-                                             destDir             : destDir,
-                                             s                   : destDir,
+        final Map<String, ?> expectedArgs = [classpath           : classpath.asPath,
+                                             destDir             : destinationDir.absolutePath,
+                                             s                   : destinationDir.absolutePath,
                                              source              : javaPluginConvention.sourceCompatibility,
                                              target              : javaPluginConvention.targetCompatibility,
                                              inpath              : ajInpath.asPath,
@@ -79,10 +84,10 @@ class AjcTest extends Specification {
         ajc.compile()
 
         then:
-        1 * iajc.execute(project, sourceSet, _ as Map<String, ?>) >> {
-            final Project p, final SourceSet s, final Map<String, ?> value ->
+        1 * iajc.execute(project, srcDirs, _ as Map<String, ?>) >> {
+            final Project p, final Set<File> s, final Map<String, ?> value ->
                 assert p == project
-                assert s == sourceSet
+                assert s == srcDirs
                 assert ImmutableMap.copyOf(value) == ImmutableMap.copyOf(expectedArgs)
         }
 
@@ -91,12 +96,19 @@ class AjcTest extends Specification {
     }
 
     @Unroll
-    def "Compile sourceSet=#sourceSet aspectpath=#aspectpath ajInpath=#ajInpath"() {
+    def """Compile
+        classpath=#classpath
+        srcDirs=#srcDirs
+        destinationDir=#destinationDir
+        aspectpath=#aspectpath
+        ajInpath=#ajInpath"""() {
 
         setup:
-        ajc.sourceSet = sourceSet
-        ajc.aspectpath = aspectpath
-        ajc.ajInpath = ajInpath
+        ajc.classpath = classpath
+        ajc.sourceDirectories = srcDirs
+        ajc.destinationDir = destinationDir
+        ajc.aspectPath = aspectpath
+        ajc.ajInPath = ajInpath
         ajc.iajc = iajc
 
         when:
@@ -106,18 +118,22 @@ class AjcTest extends Specification {
         thrown(IllegalArgumentException)
 
         where:
-        sourceSet       || aspectpath           || ajInpath
-        null            || Mock(FileCollection) || Mock(FileCollection)
-        Mock(SourceSet) || null                 || Mock(FileCollection)
-        Mock(SourceSet) || Mock(FileCollection) || null
+        classpath            || srcDirs           || destinationDir || aspectpath           || ajInpath
+        null                 || ImmutableSet.of() || Mock(File)     || Mock(FileCollection) || Mock(FileCollection)
+        Mock(FileCollection) || null              || Mock(File)     || Mock(FileCollection) || Mock(FileCollection)
+        Mock(FileCollection) || ImmutableSet.of() || null           || Mock(FileCollection) || Mock(FileCollection)
+        Mock(FileCollection) || ImmutableSet.of() || Mock(File)     || null                 || Mock(FileCollection)
+        Mock(FileCollection) || ImmutableSet.of() || Mock(File)     || Mock(FileCollection) || null
     }
 
     def "Create"() {
 
         expect:
-        ajc.aspectpath == null
-        ajc.ajInpath == null
-        ajc.sourceSet == null
+        ajc.classpath == null
+        ajc.sourceDirectories == null
+        ajc.destinationDir == null
+        ajc.aspectPath == null
+        ajc.ajInPath == null
         ajc.additionalAjcArgs.isEmpty()
         ajc.xlint == 'ignore'
         ajc.maxmem == null
