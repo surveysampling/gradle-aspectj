@@ -35,6 +35,9 @@ class Ajc extends DefaultTask {
     @Input
     Map<String, String> additionalAjcArgs = [] as Map<String, String>
 
+    @Input
+    boolean parameters = false
+
     Iajc iajc = new Iajc()
 
     Ajc() {
@@ -71,6 +74,10 @@ class Ajc extends DefaultTask {
                                          aspectPath          : aspectPath.asPath,
                                          sourceRootCopyFilter: '**/*.java,**/*.aj',
                                          showWeaveInfo       : true]
+
+        if (parameters) {
+            iajcArgs['parameters'] = parameters
+        }
 
         if (null != maxmem) {
             iajcArgs['maxmem'] = maxmem

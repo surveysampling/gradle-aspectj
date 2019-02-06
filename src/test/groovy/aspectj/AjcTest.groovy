@@ -53,7 +53,7 @@ class AjcTest extends Specification {
     }
 
     @Unroll
-    def "Compile xlint=#xlint"() {
+    def "Compile xlint=#xlint parameters=#parameters"() {
 
         setup:
         final FileCollection classpath = sourceSet.compileClasspath
@@ -67,18 +67,23 @@ class AjcTest extends Specification {
         ajc.ajInPath = ajInpath
         ajc.xlint = xlint
         ajc.iajc = iajc
+        ajc.parameters = parameters
 
-        final Map<String, ?> expectedArgs = [classpath           : classpath.asPath,
-                                             destDir             : destinationDir.absolutePath,
-                                             s                   : destinationDir.absolutePath,
-                                             source              : javaPluginConvention.sourceCompatibility,
-                                             target              : javaPluginConvention.targetCompatibility,
-                                             inpath              : ajInpath.asPath,
-                                             xlint               : xlint,
-                                             fork                : true,
-                                             aspectPath          : aspectpath.asPath,
-                                             sourceRootCopyFilter: '**/*.java,**/*.aj',
-                                             showWeaveInfo       : true]
+        Map<String, ?> expectedArgs = [classpath           : classpath.asPath,
+                                       destDir             : destinationDir.absolutePath,
+                                       s                   : destinationDir.absolutePath,
+                                       source              : javaPluginConvention.sourceCompatibility,
+                                       target              : javaPluginConvention.targetCompatibility,
+                                       inpath              : ajInpath.asPath,
+                                       xlint               : xlint,
+                                       fork                : true,
+                                       aspectPath          : aspectpath.asPath,
+                                       sourceRootCopyFilter: '**/*.java,**/*.aj',
+                                       showWeaveInfo       : true]
+
+        if (parameters) {
+            expectedArgs += [parameters: parameters]
+        }
 
         when:
         ajc.compile()
@@ -92,7 +97,11 @@ class AjcTest extends Specification {
         }
 
         where:
-        xlint << ['ignore', 'warning']
+        xlint     || parameters
+        'ignore'  || true
+        'warning' || true
+        'ignore'  || false
+        'warning' || false
     }
 
     @Unroll
@@ -137,5 +146,6 @@ class AjcTest extends Specification {
         ajc.additionalAjcArgs.isEmpty()
         ajc.xlint == 'ignore'
         ajc.maxmem == null
+        !ajc.parameters
     }
 }
