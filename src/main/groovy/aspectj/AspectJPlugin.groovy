@@ -59,22 +59,20 @@ class AspectJPlugin implements Plugin<Project> {
 
     private static void configureSourceSet(final Project project, final SourceSet sourceSet) {
 
-        final NamingConventions namingConventions = getConfigurationNamingConventions(sourceSet)
-        project.configurations.maybeCreate(namingConventions.getAspectPathConfigurationName(sourceSet))
-        project.configurations.maybeCreate(namingConventions.getAspectInpathConfigurationName(sourceSet))
+        project.configurations.maybeCreate(NamingUtils.getAspectPathConfigurationName(sourceSet))
+        project.configurations.maybeCreate(NamingUtils.getAspectInPathConfigurationName(sourceSet))
 
         if (!sourceSet.java.isEmpty()) {
-            configureTasks(project, namingConventions, sourceSet)
+            configureTasks(project, sourceSet)
         }
     }
 
     private static void configureTasks(final Project project,
-                                       final NamingConventions namingConventions,
                                        final SourceSet projectSourceSet) {
 
         final Ajc ajc = project
                 .tasks
-                .create(namingConventions.getAspectCompileTaskName(projectSourceSet), Ajc)
+                .create(NamingUtils.getAspectCompileTaskName(projectSourceSet), Ajc)
 
         final JavaCompile javaCompile = project
                 .tasks
@@ -87,22 +85,16 @@ class AspectJPlugin implements Plugin<Project> {
         ajc.classpath = projectSourceSet.compileClasspath
         ajc.aspectPath = project
                 .configurations
-                .getByName(namingConventions.getAspectPathConfigurationName(projectSourceSet))
+                .getByName(NamingUtils.getAspectPathConfigurationName(projectSourceSet))
         ajc.ajInPath = project
                 .configurations
-                .getByName(namingConventions.getAspectInpathConfigurationName(projectSourceSet))
+                .getByName(NamingUtils.getAspectInPathConfigurationName(projectSourceSet))
 
         ajc.dependsOn = javaCompile.dependsOn
         ajc.dependsOn(ajc.aspectPath, ajc.ajInPath, javaCompile.classpath)
 
         javaCompile.getTaskActions().clear()
         javaCompile.dependsOn(ajc)
-    }
-
-    private static NamingConventions getConfigurationNamingConventions(final SourceSet sourceSet) {
-        sourceSet.name == SourceSet.MAIN_SOURCE_SET_NAME ?
-                new MainNamingConventions() :
-                new DefaultNamingConventions()
     }
 }
 
