@@ -1,6 +1,7 @@
 package aspectj
 
 import org.gradle.api.Project
+import org.slf4j.Logger
 
 /**
  * @author Brian Connolly
@@ -8,6 +9,12 @@ import org.gradle.api.Project
 class Iajc {
 
     void execute(final Project project, final Set<File> sourceDirectories, final Map<String, ?> iajcArgs) {
+
+        final Logger logger = project.logger
+        logger.info("=" * 30)
+        logger.info("=" * 30)
+        logger.info("Running iajc with arguments=${iajcArgs}")
+        logger.info("srcDirs=${sourceDirectories}")
 
         final String classpath = project.configurations.ajtools.asPath
 
@@ -17,7 +24,7 @@ class Iajc {
         ant.iajc(iajcArgs) {
             sourceRoots {
                 sourceDirectories.each {
-                    project.logger.info("   sourceRoot $it")
+                    logger.info("   sourceRoot $it")
                     pathelement(location: it.absolutePath)
                 }
             }

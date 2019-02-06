@@ -48,12 +48,6 @@ class Ajc extends DefaultTask {
     void compile() {
         verifyArguments()
 
-        logger.info("=" * 30)
-        logger.info("=" * 30)
-        logger.info("Running ajc ...")
-        logger.info("classpath: ${classpath.asPath}")
-        logger.info("srcDirs ${sourceDirectories}")
-
         iajc.execute(project, sourceDirectories, getIajcArguments())
     }
 
