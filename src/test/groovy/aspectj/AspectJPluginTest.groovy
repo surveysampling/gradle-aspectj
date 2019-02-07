@@ -148,10 +148,10 @@ class AspectJPluginTest extends Specification {
 
     private static void assertAspectJDependencies(final Project project, final String ajVersion) {
 
-        final Configuration compile = project.configurations[JavaPlugin.COMPILE_CONFIGURATION_NAME]
+        final Configuration implementation = project.configurations[JavaPlugin.IMPLEMENTATION_CONFIGURATION_NAME]
         final Configuration ajTools = project.configurations[CONFIGURATION_AJTOOLS]
 
-        assert compile
+        assert implementation
                 .dependencies
                 .stream()
                 .map({ final Dependency dependency -> convertToDependencyNotation(dependency) })

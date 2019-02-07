@@ -8,6 +8,7 @@ import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.compile.JavaCompile
+
 /**
  *
  * @author Luke Taylor
@@ -46,7 +47,7 @@ class AspectJPlugin implements Plugin<Project> {
 
         final DependencyHandler dependencyHandler = project.dependencies
         dependencyHandler.add(CONFIGURATION_AJTOOLS, "org.aspectj:aspectjtools:${extension.version}")
-        dependencyHandler.add(JavaPlugin.COMPILE_CONFIGURATION_NAME, "org.aspectj:aspectjrt:${extension.version}")
+        dependencyHandler.add(JavaPlugin.IMPLEMENTATION_CONFIGURATION_NAME, "org.aspectj:aspectjrt:${extension.version}")
     }
 
     private static void configureSourceSet(final Project project, final SourceSet sourceSet) {
