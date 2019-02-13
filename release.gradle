@@ -1,0 +1,8 @@
+release {
+    failOnPublishNeeded = false
+    tagTemplate = '${name}-${version}'
+
+    git {
+        pushToRemote = false
+    }
+}
